@@ -1,0 +1,77 @@
+def step3(plaintext):
+    shift=4
+    print("-----------------------------------------------------")
+    print("You have entered step3")
+    print("This is the input to step3:",plaintext)
+    loweralpha = string.ascii_lowercase
+    shifted_string = loweralpha[shift:] + loweralpha[:shift]
+    #print("After shift",shifted_string)
+    converted = str.maketrans(loweralpha, shifted_string)
+    #print(converted)
+    print("After step3:",plaintext.translate(converted))
+    return plaintext.translate(converted)
+def step2(s):
+    print("-----------------------------------------------------")
+    print("You have entered step2")
+    print("This is the input to step2:",s)
+    print("After step2:",b64encode(s.encode('utf-8')).decode('utf-8'))
+    return b64encode(s.encode('utf-8')).decode('utf-8')
+def step1(s):
+    print("-----------------------------------------------------")
+    print("You have entered step1")
+    print("This is the input to step1:",s)
+    _step1 = str.maketrans("zyxwvutsrqponZYXWVUTSRQPONmlkjihgfedcbaMLKJIHGFEDCBA",
+                           "mlkjihgfedcbaMLKJIHGFEDCBAzyxwvutsrqponZYXWVUTSRQPON") #reverses the translation map
+    print("After step1:",str.translate(s, _step1))  #implements the new transalation to decrypt
+    return str.translate(s, _step1)
+def dec_step3(s):
+    print("-----------------------------------------------------")
+    shift=4
+    loweralpha = string.ascii_lowercase
+    shifted_string = loweralpha[shift:] + loweralpha[:shift]
+    convertedfd = str.maketrans(shifted_string,loweralpha) #reverses the translation map
+    return s.translate(convertedfd) #implements the new transalation to decrypt and returns the value
+def dec_step1(s):
+    print("-----------------------------------------------------")
+    _stepds2 = str.maketrans("mlkjihgfedcbaMLKJIHGFEDCBAzyxwvutsrqponZYXWVUTSRQPON","zyxwvutsrqponZYXWVUTSRQPONmlkjihgfedcbaMLKJIHGFEDCBA")
+    #print("After step1:",str.translate(s, _stepds2))
+    return str.translate(s, _stepds2)
+def dec_step2(s):
+    base64_bytes = s[6:].encode("ascii") 
+    sample_string_bytes = base64.b64decode(base64_bytes) #decodes the b64 encoding  after first encoding in ascii
+    return sample_string_bytes.decode("ascii")
+enc0="JebilJosephChacko"   #Input string for test
+print("------ENCRYPTION STARTS--------")
+s21=step2(enc0) #Running step 2 for encryption
+enc1='2'+s21    #Prepending '2' to the encrypted text
+#print(enc1)
+s11=step1(enc1)  #Running step1 for encryption
+enc2="1"+s11     #Prepending '1' to the encrypted text
+#print(enc2)
+s31=step3(enc2)   #Running step3 for encryption
+enc3='3'+s31      #Prepending '3' to the encrypted text     
+#print(enc3)
+s32=step3(enc3)    #Running step3 for encryption
+enc4="3"+s32     #Prepending '3' to the encrypted text
+#print(enc4)
+s12=step1(enc4)    #Running step1 for encryption
+enc5="1"+s12      #Prepending '1' to the encrypted text
+#print(enc5)
+s33=step3(enc5)    #Running step3 for encryption
+enc6="3"+s33     #Prepending '3' to the encrypted text
+print("FINAL CIPHERTEXT:",enc6)      #Final encrypted result
+print("------DECRYPTION STARTS--------")
+#---------------------# Decryption starts
+dec31=dec_step3(enc6) #The last encryption step was step3, so we start in the reverse order for decryption with step3
+print("After first decryption:",dec31)
+dec11=dec_step1(dec31) #Decryption to reverse step1 encryption
+print("After second decryption:",dec11)
+dec32=dec_step3(dec11) #Decryption to reverse step3 encryption
+print("After third decryption:",dec32)
+dec33=dec_step3(dec32) #Decryption to reverse step3 encryption
+print("After fourth decryption:",dec33)
+dec12=dec_step1(dec33) #Decryption to reverse step1 encryption
+print("After fifth decryption:",dec12)
+dec21=dec_step2(dec12) #Decryption to reverse step2 encryption
+print("-----------------------------------------------------")
+print("After last decryption:",dec21) #Final decrypted output
