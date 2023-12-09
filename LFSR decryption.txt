@@ -1,0 +1,132 @@
+def lfsr(register, taps):
+    """
+    Linear Feedback Shift Register (LFSR) function.
+
+    Args:
+        register (str): The current state of the register as a binary string.
+        taps (list): List of tap positions for feedback.
+
+    Returns:
+        tuple: A tuple containing the updated register state and the popped out bit.
+    """
+    # XOR the bits at the specified tap positions
+    xor_result = int(register[taps[0]]) ^ int(register[taps[1]])
+
+    # Update the register state by shifting one bit and adding the XOR result
+    register = str(xor_result) + register[:-1]
+
+    # Return the updated register state and the popped out bit
+    return register, register[-1]
+
+
+def add_modulo(popped_bits1, popped_bits2, modulo=256):
+    """
+    Addition modulo function for popped out bits.
+
+    Args:
+        popped_bits1 (str): Popped out bits from register 1.
+        popped_bits2 (str): Popped out bits from register 2.
+        modulo (int): Modulo value for the addition.
+
+    Returns:
+        str: Binary result after addition modulo.
+    """
+    # Convert the popped out bits to integers and perform addition modulo
+    result = (int(popped_bits1, 2) + int(popped_bits2, 2)) % modulo
+
+    # Return the binary result as a string, zero-filled to ensure it is 8 bits
+    return bin(result)[2:].zfill(8)
+
+
+def perform_operations(register1, register2, taps1, taps2,  iterations, input_byte):
+    """
+    Perform the specified operations for a given number of iterations on the input byte.
+
+    Args:
+        register1 (str): Initial state of register 1.
+        register2 (str): Initial state of register 2.
+        taps1 (list): List of tap positions for register 1.
+        taps2 (list): List of tap positions for register 2.
+        key (str): Key for XOR operation.
+        iterations (int): Number of iterations.
+        input_byte (str): Binary representation of the byte from the input file.
+
+    Returns:
+        str: Resultant byte after the specified operations.
+    """
+    popped_bits1 = ""
+    popped_bits2 = ""
+    for ji in range(iterations):
+        for _ in range(8):
+            register1, popped_bit1 = lfsr(register1, taps1)
+            popped_bits1 += popped_bit1
+
+            register2, popped_bit2 = lfsr(register2, taps2)
+            popped_bits2 += popped_bit2
+
+        # Perform addition modulo on the popped out bits for both key and input_byte
+        added_result = add_modulo(popped_bits1, popped_bits2)
+
+        # XOR the result with the input byte and the key
+        xored_result = bin(int(added_result, 2) ^ int(input_byte, 2) )[2:].zfill(8)
+
+    return xored_result
+
+
+def main():
+    # Initial register values and parameters
+    register1 = "101010100001"
+    register2 = "1110101000011001110"
+    register1o = "101010100001"
+    register2o = "1110101000011001110" # The original values of registers to be used by the file bytes
+    taps1 = [2, 7]
+    taps2 = [5, 11]
+    key = "01100000"
+
+    # Perform LFSR to find the number of iterations
+    iteration_counter = 0
+    while True:
+        popped_bits1 = ""
+        popped_bits2 = ""
+
+        for _ in range(8):
+            register1, popped_bit1 = lfsr(register1, taps1)
+            popped_bits1 += popped_bit1
+
+            register2, popped_bit2 = lfsr(register2, taps2)
+            popped_bits2 += popped_bit2
+
+        added_result = add_modulo(popped_bits1, popped_bits2)
+        xored_result = bin(int(added_result, 2) ^ int(key, 2))[2:].zfill(8)
+
+        iteration_counter += 1
+        if xored_result == "10001001":
+            break
+
+    print(f"Number of iterations: {iteration_counter}")
+
+    # Read input file, perform operations, and write to output file
+    input_filename = "flag.enc"
+    output_filename = "flagnew1.png"
+
+    with open(input_filename, "rb") as input_file, open(output_filename, "wb") as output_file:
+        while True:
+            input_byte = input_file.read(1)
+            if not input_byte:
+                break
+
+            # Convert input byte to binary representation
+            input_byte_bin = bin(int.from_bytes(input_byte, byteorder='big'))[2:].zfill(8)
+            #print(f"Input Byte (Binary): {input_byte_bin}")
+
+            # Perform operations for each byte
+            result_byte = perform_operations(register1o, register2o, taps1, taps2,  iteration_counter, input_byte_bin)
+
+            # Convert result byte to binary representation and write to the output file
+            result_byte_bin = bin(int(result_byte, 2))[2:].zfill(8)
+            #print(f"Output Byte (Binary): {result_byte_bin}")
+            output_file.write(bytes([int(result_byte, 2)]))
+
+
+if __name__ == "__main__":
+    main()
