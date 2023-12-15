@@ -1,0 +1,25 @@
+from blockutils import *
+from string import printable
+from multiprocessing import Pool
+from functools import partial
+
+def encrypt(hexchars):
+    return getdata(f'ctrime/encrypt/{hexchars}', 'ciphertext')  # Assuming getdata is a function from the blockutils module
+
+def get_length(known, char):
+    return char, len(encrypt(str_to_hex(known[-5:] + char)))  # Assuming str_to_hex is another function from blockutils
+
+def main():
+    known = 'crypto{'
+    
+    with Pool(50) as p:
+        while '}' not in known:
+            lengths = p.map(partial(get_length, known), printable)
+            char = min(lengths, key=lambda x: x[1])[0]
+            known += char
+            print(known, end='\r')
+
+    print()
+
+if __name__ == "__main__":
+    main()

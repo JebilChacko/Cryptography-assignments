@@ -1,0 +1,42 @@
+import requests
+from pwn import enhex
+
+BASE_URL = "https://aes.cryptohack.org/ecb_oracle"
+
+# https://www3.nd.edu/~busiforc/handouts/cryptography/letterfrequencies.html
+letters = 'etainoshrdlucmfwygpbvkqjxz{}_0123456789ETAINOSHRDLUCMFWYGPBVKQJXZ' 
+
+size = 31 # flag length less than two blocks
+matchblock = size // 16
+plaintext = ""
+
+def bulk(s, w):
+    return [s[i:i + w] for i in range(0, len(s), w)]
+
+def encrypt_remote(h):
+    req = f"{BASE_URL}/encrypt/{enhex(h)}"
+    r = requests.get(req)
+    data = r.json()
+    ciphertext = data["ciphertext"]
+    bulks = bulk(ciphertext, 32)
+    return bulks
+
+def find_match(mypad, to_match):
+    mypad = mypad + plaintext
+    for letter in letters:
+        tryout = (mypad + letter).encode()
+        bulks = encrypt_remote(tryout)
+        if bulks[matchblock] == to_match:
+            return letter
+
+for i in range(size, 0, -1):
+    mypad = "A"*(size  -len(plaintext))
+    print(f"{bulk(mypad + plaintext,16)} => {encrypt_remote(mypad.encode())}")
+    to_match = encrypt_remote(mypad.encode())[matchblock]
+    letter = find_match(mypad, to_match)
+    if find_match(mypad, to_match):
+        plaintext += letter
+    else:
+        break
+
+print(f"Result: {plaintext}")

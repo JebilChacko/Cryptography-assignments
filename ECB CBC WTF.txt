@@ -1,0 +1,54 @@
+from Crypto.Cipher import AES
+from textwrap import wrap
+import requests
+import json
+import binascii
+
+url = "https://aes.cryptohack.org/ecbcbcwtf/"
+
+def getPlaintext(url,ciphertext):
+    req = requests.get(url+"decrypt/"+ciphertext+"/").content
+    test = json.loads(req)
+    plaintext = test["plaintext"]
+    return plaintext
+
+def getFlagCipher():
+    req = requests.get(url+"encrypt_flag/").content
+    test = json.loads(req)
+    ciphertext = wrap(test["ciphertext"],32)
+    iv = ciphertext[0]
+    ciphertext = "".join(ciphertext[1:])
+    return ciphertext,iv
+
+def getCipherBlock(ciphertext):
+    x = wrap(ciphertext,32)
+    ct1 = x[0]
+    ct2 = x[1]
+    return ct1, ct2
+
+def toIntList(string):
+    test = binascii.unhexlify(string)
+    l = [i for i in test]
+    return l
+
+ciphertext,iv = getFlagCipher()
+print(f"ciphertext : {ciphertext}")
+print(f"iv : {iv}\n")
+ct1,ct2 = getCipherBlock(ciphertext)
+plaintext = getPlaintext(url,ct1)
+
+
+ct1 = toIntList(ct1)
+pt1 = toIntList(plaintext)
+iv = toIntList(iv)
+pt = ""
+
+# get first block flag
+for x,y in zip(pt1,iv):
+    pt += chr(x^y)
+
+pt2 = getPlaintext(url,ct2)
+pt2 = toIntList(pt2)
+for x,y in zip(ct1,pt2):
+    pt+= chr(x^y)
+print(pt)

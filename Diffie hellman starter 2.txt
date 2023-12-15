@@ -1,0 +1,18 @@
+Score: 1
+from pyfinite import ffield
+
+p = 28151
+F = [i for i in range(1,p)]
+
+for g in range(2,p):
+    H=[] 
+    for i in range(p):
+        h = pow(g,i,p)
+        H.append(h)
+    
+    H.sort() 
+    H =list(dict.fromkeys(H)) # remove dublicates
+
+    if F == H:
+        print("The smallest possible g  is: ", g)
+        break

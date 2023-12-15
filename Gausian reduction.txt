@@ -1,0 +1,22 @@
+vector_v = (846835985, 9834798552)
+vector_u = (87502093, 123094980)
+
+def dot_product(vector1, vector2):
+    return vector1[0] * vector2[0] + vector1[1] * vector2[1]
+
+def scalar_multiply(scalar, vector):
+    return (scalar * vector[0], scalar * vector[1])
+
+def vector_difference(vector1, vector2):
+    return (vector1[0] - vector2[0], vector1[1] - vector2[1])
+
+if dot_product(vector_u, vector_u) <= dot_product(vector_v, vector_v):
+    vector_v, vector_u = vector_u, vector_v
+    scalar_m = int(dot_product(vector_v, vector_u) / dot_product(vector_v, vector_v))
+    
+    if scalar_m == 0:
+        print(vector_v, vector_u)
+    
+    vector_u = vector_difference(vector_u, scalar_multiply(scalar_m, vector_v))
+
+print(dot_product(vector_u, vector_v))

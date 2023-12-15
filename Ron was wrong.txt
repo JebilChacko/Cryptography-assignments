@@ -1,0 +1,36 @@
+from glob import glob
+from Crypto.PublicKey import RSA
+from itertools import combinations
+from math import gcd, lcm
+from Crypto.Cipher import PKCS1_OAEP
+
+# Dictionary to store factored keys
+factored = {}
+
+# Generate combinations of keys and find common factors
+for alice, bob, p in [
+    (alice, bob, p)
+    for alice, bob in combinations(
+        [
+            (int(name.split(".")[0]), RSA.importKey(open(name).read()))
+            for name in glob("*.pem")
+        ],
+        2,
+    )
+    if (p := gcd(alice[1].n, bob[1].n)) > 1
+]:
+    # Create factored keys for Alice and Bob
+    factored[alice[0]] = RSA.construct(
+        [alice[1].n, alice[1].e, pow(alice[1].e, -1, lcm(p - 1, (alice[1].n // p) - 1))]
+    )
+    factored[bob[0]] = RSA.construct(
+        [bob[1].n, bob[1].e, pow(bob[1].e, -1, lcm(p - 1, (bob[1].n // p) - 1))]
+    )
+
+# Decrypt and print the messages
+decrypted_messages = [
+    PKCS1_OAEP.new(key).decrypt(bytes.fromhex(open(f"{n}.ciphertext").read()))
+    for n, key in factored.items()
+]
+
+print(*decrypted_messages)

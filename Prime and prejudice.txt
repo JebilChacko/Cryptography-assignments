@@ -1,0 +1,117 @@
+import math
+import telnetlib
+import json
+from sympy import *
+
+HOST = "socket.cryptohack.org"
+PORT = 13385
+
+FLAG = 'crypto{????????????????????????????????????}'
+
+def generate_basis(n):
+    basis = [True] * n
+    for i in range(3, int(n**0.5)+1, 2):
+        if basis[i]:
+            basis[i*i::2*i] = [False]*((n-i*i-1)//(2*i)+1)
+    return [2] + [i for i in range(3, n, 2) if basis[i]]
+
+def CRT(lst, lst2):
+    product = 1
+    list3 = []
+
+    for i in lst:
+        product *= i
+
+    for i in range(len(lst)):
+        c = product // lst[i]
+        inv = pow(c, -1, lst[i])
+        c = (c * inv) % product
+        list3 += [c]
+
+    result = 0
+    for i in range(len(lst)):
+        result += (list3[i] * lst2[i]) % product
+
+    return result % product, product
+
+def NQR(basis):
+    res_dict = {}
+    for i in basis:
+        res_dict[i] = [j for j in range(2, i) if pow(j, (i-1)//2, i) == (i-1)]
+    return res_dict
+
+def find_NQR(p, k2):
+    lst = NQR(basis)[p]
+    return any(i in lst and (67*i-66) % p in lst and (k2*i-k2+1) % p in lst for i in range(1, p))
+
+def find_k2(k2):
+    while True:
+        if not isprime(k2):
+            k2 += 2
+            continue
+
+        if all(find_NQR(i, k2) for i in basis):
+            break
+
+        k2 += 2
+
+    return k2
+
+def append_for_CRT(k2):
+    result_lst = []
+    for i in basis:
+        for j in range(1, i):
+            if j in NQR(basis)[i] and (67*j-66) % i in NQR(basis)[i] and (k2*j-k2+1) % i in NQR(basis)[i]:
+                result_lst.append(j)
+                break
+    return result_lst
+
+x = 127
+list2 = append_for_CRT(x)
+
+list2 += [x - pow(67, -1, x), x, 67 - pow(x, -1, 67), 67, 5, 8]
+basis += [x, 67, x, 67, 5, 8]
+
+p = CRT(basis, list2)
+a, b = p[0], p[1]
+t = 2**200 // b
+a = a + t * b
+
+while not all(isprime(a * k - k + 1) for k in [1, 67]):
+    a += b
+
+n = a * (67 * a - 66) * (x * a - x + 1)
+
+pr = telnetlib.Telnet(HOST, PORT)
+
+def readline():
+    return pr.read_until(b"\n")
+
+def json_send(hsh):
+    request = json.dumps(hsh).encode()
+    pr.write(request)
+
+def json_recv():
+    line = readline()
+    return json.loads(line.decode())
+
+def take_dict(s):
+    m = 0
+    n = 0
+    for i in range(len(s)):
+        if s[i] == "{":
+            m = i
+        if s[i] == "}":
+            n = i
+
+    str_data = ""
+    for i in range(m, n + 1):
+        str_data += s[i]
+
+    return json.loads(str_data)
+
+q = readline().decode()
+request = {'prime': n, 'base': a}
+json_send(request)
+q = readline().decode()
+print(q)

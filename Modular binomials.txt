@@ -1,0 +1,7 @@
+from data import *
+import math
+
+p = math.gcd(pow(7, e1*e2, N) * pow(c1, e2, N) - pow(3, e1*e2, N) * pow(c2, e1, N), N)
+q = N//p
+
+print(f"crypto{{{p},{q}}}")

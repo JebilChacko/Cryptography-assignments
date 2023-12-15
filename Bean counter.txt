@@ -1,0 +1,14 @@
+from pwn import xor
+import requests
+
+url = 'http://aes.cryptohack.org/bean_counter/encrypt'
+
+r = requests.get(url)
+ct = bytes.fromhex(r.json()['encrypted'])
+png_header = bytes.fromhex('89504e470d0a1a0a0000000d49484452') # Thanks wiki
+
+enc_iv = xor(png_header, ct[:16])
+flag_xdmp = xor(enc_iv, ct) # Slow but I like it
+
+with open('flag.png', 'wb') as flag_img:
+    flag_img.write(flag_xdmp)

@@ -1,0 +1,40 @@
+from random import randint
+from cipher import CIPHER
+
+def encrypt_flag(flag):
+    ciphertext = []
+    plaintext = ''.join([bin(i)[2:].zfill(8) for i in flag])
+    for b in plaintext:
+        e = randint(1, p)
+        n = pow(a, e, p)
+        if b == '1':
+            ciphertext.append(n)
+        else:
+            n = -n % p
+            ciphertext.append(n)
+    return ciphertext
+
+
+def decrypt_flag(cipher):
+    def _check(nb):
+        try:
+            discrete_log(R(nb), R(a))
+            # return 1 if discrete_log found
+            # this mean there is a number k where
+            # (a ^ k) % p == nb
+            return '1'
+        except ValueError:
+            # ValueError is raise when there is no solution
+            return '0'
+    plaintext = ''
+    for nb in cipher:
+        plaintext += _check(nb)
+
+    flag = ''.join(chr(int(plaintext[i:i+8], 2)) for i in range(0, len(plaintext), 8))
+    return flag # "crypto{p4tterns_1n_re5idu3s}"
+
+p = 1007621497415251
+R = IntegerModRing(p)
+a = 288260533169915
+
+print(decrypt_flag(CIPHER))

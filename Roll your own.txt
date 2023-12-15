@@ -1,0 +1,29 @@
+
+#! python3
+from pwn import *
+from Crypto.Util.number import *
+import json
+from math import gcd
+
+def connect_and_exchange():
+    conn = connect("socket.cryptohack.org", 13403)
+    conn.recvuntil(b'Prime generated: "')
+    q = int(conn.recvuntil(b'"').decode().strip('"'), 16)
+    
+    n = q ** 2
+    g = pow(2, (n - 1) // q, n)
+    io = json.dumps({'g': hex(g), 'n': hex(n)}).encode()
+    
+    conn.sendline(io)
+    conn.recvuntil(b'Generated my public key: "')
+    h = int(conn.recvuntil(b'"').decode().strip('"'), 16)
+    conn.recvline()
+    
+    x = ((h // q) * inverse((g // q), q)) % q
+    io = json.dumps({'x': hex(x)}).encode()
+    
+    conn.sendline(io)
+    conn.interactive()
+
+if __name__ == "__main__":
+    connect_and_exchange()

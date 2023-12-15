@@ -1,0 +1,24 @@
+
+from Crypto.Util.strxor import strxor
+import requests
+
+def get_cookie():
+    r = requests.get('http://aes.cryptohack.org/flipping_cookie/get_cookie/')
+    cookie =  r.json()['cookie']
+    return cookie[:32], cookie[32:]
+
+def check_admin(cookie, iv):
+    r = requests.get('http://aes.cryptohack.org/flipping_cookie/check_admin/' + cookie + '/' + iv + '/')
+    return r.json()['flag']
+    
+iv, cookie = get_cookie()
+iv = bytes.fromhex(iv)
+
+#admin=False;expiry=time_stamp\x03\x03\x03'
+#     [6   11] --> indexes in byte representation and not the hex one
+#We will substitute the False; with True; the semicolon is needed because a split ill be done on the byte array and the check is on the list items so any junk data attached ti 'True' value will ruin our forged message and won't give the flag
+
+crafted_iv = iv[:6] + strxor(strxor(iv[6:11],b'True;'), b'False') + iv[11:]
+
+print (check_admin(cookie, crafted_iv.hex()))
+#crypto{4u7h3n71c4710n_15_3553n714l}

@@ -1,0 +1,40 @@
+from glob import glob
+from Crypto.PublicKey import RSA
+from itertools import combinations
+from math import gcd, lcm
+from Crypto.Cipher import PKCS1_OAEP
+
+def find_common_factors(keys):
+    factored_keys = {}
+    
+    for alice, bob, p in [
+        (alice, bob, p)
+        for alice, bob in combinations(keys, 2)
+        if (p := gcd(alice[1].n, bob[1].n)) > 1
+    ]:
+        factored_keys[alice[0]] = RSA.construct(
+            [alice[1].n, alice[1].e, pow(alice[1].e, -1, lcm(p - 1, (alice[1].n // p) - 1))]
+        )
+        factored_keys[bob[0]] = RSA.construct(
+            [bob[1].n, bob[1].e, pow(bob[1].e, -1, lcm(p - 1, (bob[1].n // p) - 1))]
+        )
+    
+    return factored_keys
+
+def decrypt_messages(factored_keys):
+    decrypted_messages = [
+        PKCS1_OAEP.new(key).decrypt(bytes.fromhex(open(f"{n}.ciphertext").read()))
+        for n, key in factored_keys.items()
+    ]
+    return decrypted_messages
+
+def main():
+    key_files = [(int(name.split(".")[0]), RSA.importKey(open(name).read())) for name in glob("*.pem")]
+    
+    factored_keys = find_common_factors(key_files)
+    decrypted_messages = decrypt_messages(factored_keys)
+    
+    print(*decrypted_messages)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+p = 29
+
+# Quadratic residues and quadratic non-residues
+ints = [14, 6, 11]
+
+# Recursive function to return if the provided integer is a
+# quadratic residue and the value of a
+def isQuadraticResidue(integer, a=1):
+    if a == p:
+        return False, -1
+    elif integer == (a**2) % p:
+        return True, a
+    else:
+        return isQuadraticResidue(integer, a + 1)
+
+for i in range(len(ints)):
+    truth, a = isQuadraticResidue(ints[i])
+    if truth:
+        print(a)

@@ -1,0 +1,22 @@
+import math
+from functools import reduce
+
+def extended_gcd(a, b):
+    if a == 0:
+        return b, 0, 1
+
+    gcd, x1, y1 = extended_gcd(b % a, a)
+
+    x = y1 - (b // a) * x1
+    y = x1
+
+    return gcd, x, y
+
+coefficients = [2, 3, 5]
+moduli = [5, 11, 17]
+M = reduce(lambda a, b: a * b, moduli, 1)
+Ms = [M // m for m in moduli]
+
+es = [extended_gcd(Mi, mi)[1] * Mi for mi, Mi in zip(moduli, Ms)]
+result = sum([x * e for x, e in zip(coefficients, es)]) % M
+print("x=", result)

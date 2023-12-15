@@ -1,0 +1,43 @@
+from Crypto.Util.number import inverse
+import hashlib
+
+def point_addition(P1, P2):
+    prime_modulus, a, b = 9739, 497, 1768
+
+    x1, y1 = P1[0], P1[1]
+    x2, y2 = P2[0], P2[1]
+
+    slope = 1
+    if P1 == [0, 0]:
+        return P2
+    elif P2 == [0, 0]:
+        return P1
+    else:
+        if P1 != P2:
+            slope = (y2 - y1) * inverse(x2 - x1, prime_modulus) % prime_modulus
+        else:
+            slope = (3 * x1 * x1 + a) * inverse(2 * y1, prime_modulus) % prime_modulus
+
+        x3 = (slope * slope - x1 - x2) % prime_modulus
+        y3 = (slope * (x1 - x3) - y1) % prime_modulus
+
+        return [x3, y3]
+
+def scalar_multiplication(n, x, y):
+    P = [x, y]
+
+    Q = P
+    R = [0, 0]
+    while n > 0:
+        if n % 2 == 1:
+            R = point_addition(R, Q)
+
+        Q = point_addition(Q, Q)
+        n //= 2
+
+    return R
+
+if __name__ == '__main__':
+    result_x_coordinate = scalar_multiplication(int(input("Enter n: ")), int(input("Enter x: ")), int(input("Enter y: ")))
+    hashed_result = hashlib.sha1(str(result_x_coordinate[0]).encode()).hexdigest()
+    print(hashed_result)
